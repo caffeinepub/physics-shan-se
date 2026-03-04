@@ -57,8 +57,27 @@ function UpiModal({
   onClose: () => void;
   item: PayItem | null;
 }) {
+  const [step, setStep] = useState<"pay" | "confirm" | "downloading">("pay");
+
+  // Reset step when modal opens/closes
+  const handleClose = () => {
+    setStep("pay");
+    onClose();
+  };
+
+  // Reset step when item changes (new modal open)
+  const prevOpenRef = useRef(false);
+  if (open && !prevOpenRef.current) {
+    prevOpenRef.current = true;
+    if (step !== "pay") setStep("pay");
+  }
+  if (!open && prevOpenRef.current) {
+    prevOpenRef.current = false;
+  }
+
   if (!item) return null;
-  const upiId = "9830277479@ybl";
+
+  const upiId = "ashok.brightminds-3@okicici";
   const encodedNote = encodeURIComponent(`Physics Shan Se: ${item.label}`);
   const upiDeepLink = `upi://pay?pa=${upiId}&pn=Physics+Shan+Se&am=${item.price}&cu=INR&tn=${encodedNote}`;
   const waMsg = encodeURIComponent(
@@ -66,80 +85,186 @@ function UpiModal({
   );
   const waLink = `https://wa.me/919830277479?text=${waMsg}`;
 
+  const triggerDownload = () => {
+    setStep("downloading");
+    // Placeholder download: opens WhatsApp with payment confirmation
+    // Replace the href below with a real PDF URL when files are ready
+    const placeholderFileUrl = "#"; // swap with actual hosted PDF URL
+    if (placeholderFileUrl !== "#") {
+      const a = document.createElement("a");
+      a.href = placeholderFileUrl;
+      a.download = `${item.label}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+    // After 2 seconds auto-close and redirect to WhatsApp for file delivery
+    setTimeout(() => {
+      window.open(waLink, "_blank");
+      handleClose();
+    }, 2000);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-sm w-full" data-ocid="upi.dialog">
         <DialogHeader>
           <DialogTitle className="text-navy font-serif text-lg">
-            Pay &amp; Download
+            {step === "downloading" ? "Payment Confirmed!" : "Pay & Download"}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 pt-1">
-          {/* Item info */}
-          <div className="bg-orange/8 border border-orange/20 rounded-lg px-4 py-3">
-            <p className="text-sm font-sans font-semibold text-navy">
-              {item.label}
-            </p>
-            <p className="text-xs text-muted-foreground font-sans mt-0.5">
-              {item.description}
-            </p>
-            <p className="text-2xl font-serif font-bold text-orange mt-2">
-              ₹{item.price}
-            </p>
+        {/* ── Step 1: Pay ── */}
+        {step === "pay" && (
+          <div className="space-y-4 pt-1">
+            {/* Item info */}
+            <div className="bg-orange/8 border border-orange/20 rounded-lg px-4 py-3">
+              <p className="text-sm font-sans font-semibold text-navy">
+                {item.label}
+              </p>
+              <p className="text-xs text-muted-foreground font-sans mt-0.5">
+                {item.description}
+              </p>
+              <p className="text-2xl font-serif font-bold text-orange mt-2">
+                ₹{item.price}
+              </p>
+            </div>
+
+            {/* QR Code */}
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-xs font-sans font-semibold text-muted-foreground uppercase tracking-wide self-start">
+                Scan to Pay
+              </p>
+              <div className="rounded-xl border border-border bg-white p-3 shadow-sm">
+                <img
+                  src="/assets/uploads/image-1.png"
+                  alt="UPI QR Code — scan with any UPI app"
+                  className="w-44 h-44 object-contain"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground font-sans">
+                UPI ID:{" "}
+                <span className="font-semibold text-navy select-all">
+                  {upiId}
+                </span>
+              </p>
+            </div>
+
+            {/* Pay button (deep link for mobile) */}
+            <a
+              href={upiDeepLink}
+              className="flex items-center justify-center gap-2 w-full rounded-md py-3 text-white font-sans font-semibold text-sm transition-colors duration-200"
+              style={{ backgroundColor: "oklch(var(--orange))" }}
+              data-ocid="upi.pay_button"
+            >
+              Open UPI App &amp; Pay ₹{item.price}
+            </a>
+
+            {/* Divider */}
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-xs text-muted-foreground font-sans">
+                After paying
+              </span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+
+            {/* Confirm payment button */}
+            <button
+              type="button"
+              onClick={() => setStep("confirm")}
+              className="flex items-center justify-center gap-2 w-full rounded-md py-2.5 border-2 border-orange/50 text-orange font-sans font-semibold text-sm hover:bg-orange/6 transition-colors"
+              data-ocid="upi.confirm_button"
+            >
+              I Have Paid — Get My File
+            </button>
           </div>
+        )}
 
-          {/* UPI details */}
-          <div className="space-y-1">
-            <p className="text-xs font-sans font-semibold text-muted-foreground uppercase tracking-wide">
-              UPI ID
+        {/* ── Step 2: Confirm ── */}
+        {step === "confirm" && (
+          <div className="space-y-5 pt-1">
+            <div className="rounded-lg bg-orange/6 border border-orange/20 px-4 py-4 text-center space-y-1">
+              <p className="text-sm font-sans font-semibold text-navy">
+                {item.label}
+              </p>
+              <p className="text-2xl font-serif font-bold text-orange">
+                ₹{item.price}
+              </p>
+            </div>
+
+            <p className="text-sm font-sans text-muted-foreground text-center leading-relaxed">
+              Tap{" "}
+              <span className="font-semibold text-navy">
+                Confirm &amp; Download
+              </span>{" "}
+              to start your download. We will also open WhatsApp so you can
+              share your payment screenshot for our records.
             </p>
-            <p className="text-base font-sans font-bold text-navy">{upiId}</p>
-            <p className="text-xs text-muted-foreground font-sans">
-              Open any UPI app and pay to the above ID, or tap the button below.
-            </p>
+
+            <button
+              type="button"
+              onClick={triggerDownload}
+              className="flex items-center justify-center gap-2 w-full rounded-md py-3 text-white font-sans font-semibold text-sm transition-colors duration-200"
+              style={{ backgroundColor: "oklch(var(--orange))" }}
+              data-ocid="upi.download_button"
+            >
+              <Download size={15} />
+              Confirm &amp; Download
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setStep("pay")}
+              className="w-full text-xs font-sans text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
+              data-ocid="upi.back_button"
+            >
+              Go back
+            </button>
           </div>
+        )}
 
-          {/* Pay button */}
-          <a
-            href={upiDeepLink}
-            className="flex items-center justify-center gap-2 w-full rounded-md py-3 text-white font-sans font-semibold text-sm transition-colors duration-200"
-            style={{ backgroundColor: "oklch(var(--orange))" }}
-            data-ocid="upi.pay_button"
-          >
-            Open UPI App &amp; Pay ₹{item.price}
-          </a>
-
-          {/* Divider */}
-          <div className="flex items-center gap-3">
-            <div className="flex-1 h-px bg-border" />
-            <span className="text-xs text-muted-foreground font-sans">
-              After payment
-            </span>
-            <div className="flex-1 h-px bg-border" />
+        {/* ── Step 3: Downloading ── */}
+        {step === "downloading" && (
+          <div className="pt-2 pb-4 flex flex-col items-center gap-4 text-center">
+            <div
+              className="flex items-center justify-center w-16 h-16 rounded-full"
+              style={{ backgroundColor: "oklch(var(--orange) / 0.12)" }}
+            >
+              <Download
+                size={28}
+                strokeWidth={1.8}
+                style={{ color: "oklch(var(--orange))" }}
+              />
+            </div>
+            <div>
+              <p className="text-base font-semibold text-navy font-sans">
+                Your download is starting…
+              </p>
+              <p className="text-xs text-muted-foreground font-sans mt-1 leading-relaxed">
+                WhatsApp will open so you can share your payment screenshot. We
+                will send you the file there shortly.
+              </p>
+            </div>
+            <div
+              className="w-full rounded-full h-1.5 overflow-hidden"
+              style={{ backgroundColor: "oklch(var(--orange) / 0.15)" }}
+              data-ocid="upi.loading_state"
+            >
+              <div
+                className="h-full rounded-full animate-pulse"
+                style={{
+                  backgroundColor: "oklch(var(--orange))",
+                  width: "70%",
+                }}
+              />
+            </div>
           </div>
-
-          {/* WhatsApp link */}
-          <a
-            href={waLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full rounded-md py-2.5 border border-border text-foreground font-sans font-semibold text-sm hover:bg-muted/40 transition-colors"
-            data-ocid="upi.whatsapp_button"
-          >
-            <Phone size={14} />
-            Share Screenshot on WhatsApp
-          </a>
-
-          <p className="text-xs text-muted-foreground font-sans text-center leading-relaxed">
-            Send your payment screenshot to WhatsApp and we will send you the
-            file within a few hours.
-          </p>
-        </div>
+        )}
 
         <button
           type="button"
-          onClick={onClose}
+          onClick={handleClose}
           className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
           aria-label="Close"
           data-ocid="upi.close_button"
@@ -156,10 +281,12 @@ function PayButton({
   item,
   ocid,
   onPay,
+  buttonLabel = "Unlock & Download",
 }: {
   item: PayItem;
   ocid: string;
   onPay: (item: PayItem) => void;
+  buttonLabel?: string;
 }) {
   return (
     <button
@@ -168,8 +295,7 @@ function PayButton({
       onClick={() => onPay(item)}
       className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-sans font-semibold rounded-md border border-orange/40 text-orange bg-orange/6 hover:bg-orange/12 transition-colors cursor-pointer select-none whitespace-nowrap"
     >
-      <Download size={13} className="shrink-0" />₹{item.price} Pay &amp;
-      Download
+      <Download size={13} className="shrink-0" />₹{item.price} {buttonLabel}
     </button>
   );
 }
@@ -180,11 +306,13 @@ function ChapterList({
   scope,
   makeItem,
   onPay,
+  buttonLabel,
 }: {
   chapters: string[];
   scope: string;
   makeItem: (chapter: string, idx: number) => PayItem;
   onPay: (item: PayItem) => void;
+  buttonLabel?: string;
 }) {
   return (
     <ul className="divide-y divide-border">
@@ -204,6 +332,7 @@ function ChapterList({
             item={makeItem(chapter, idx)}
             ocid={`${scope}.button.${idx + 1}`}
             onPay={onPay}
+            buttonLabel={buttonLabel}
           />
         </li>
       ))}
@@ -293,7 +422,7 @@ function AttendClassSection() {
             className="text-2xl md:text-3xl font-bold text-navy leading-tight"
             style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
           >
-            Attend Class
+            Attend In-Person Classes
           </h2>
           <p className="text-sm font-sans text-muted-foreground mt-0.5">
             Weekend in-person physics classes in Kolkata
@@ -451,8 +580,8 @@ function AttendClassSection() {
             ))}
           </div>
 
-          <p className="text-xs text-muted-foreground font-sans mt-auto">
-            Max 10 students per batch · Personal attention
+          <p className="text-xs font-sans text-muted-foreground mt-auto border-t border-border pt-2">
+            Maximum 10 students per batch to ensure personal attention.
           </p>
         </div>
       </div>
@@ -563,13 +692,17 @@ export default function LearnPage() {
           {/* ──────────────────────────────────────────────────── */}
           <SectionCard id="study-online" ocid="study.section">
             <SectionHeading number="02" title="Study Online" />
-            <p className="text-sm font-sans text-muted-foreground mb-6 -mt-2">
-              Chapter-wise study materials for {selectedClass} ({selectedBoard}
-              ). Pay &amp; download each resource.
+            <p className="text-sm font-sans text-muted-foreground mb-2 -mt-2">
+              Download chapter-wise study material prepared for ICSE and CBSE
+              physics students.
+            </p>
+            <p className="text-xs font-sans text-muted-foreground mb-6">
+              Pay and unlock each resource for {selectedClass} ({selectedBoard}
+              ).
             </p>
 
             <Accordion type="multiple" className="space-y-3">
-              {/* Chapter Notes */}
+              {/* Concept Notes */}
               <AccordionItem
                 value="notes"
                 className="border border-border rounded-lg overflow-hidden"
@@ -581,7 +714,7 @@ export default function LearnPage() {
                       <BookOpen size={14} strokeWidth={1.8} />
                     </span>
                     <span className="text-base font-semibold text-navy font-sans">
-                      Chapter Notes
+                      Concept Notes
                     </span>
                     <span className="text-xs text-muted-foreground font-sans ml-1">
                       ₹49 each
@@ -593,11 +726,46 @@ export default function LearnPage() {
                     chapters={chapters}
                     scope="study.notes"
                     makeItem={(chapter) => ({
-                      label: `Chapter Notes: ${chapter}`,
+                      label: `Concept Notes: ${chapter}`,
                       price: 49,
-                      description: `${selectedClass} ${selectedBoard} — Detailed chapter notes`,
+                      description: `${selectedClass} ${selectedBoard} — Detailed concept notes`,
                     })}
                     onPay={openPay}
+                    buttonLabel="Unlock & Download"
+                  />
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Numericals Practice Sets */}
+              <AccordionItem
+                value="numericals"
+                className="border border-border rounded-lg overflow-hidden"
+                data-ocid="study.numericals.panel"
+              >
+                <AccordionTrigger className="px-4 py-3.5 hover:no-underline hover:bg-muted/40 transition-colors [&[data-state=open]]:bg-muted/30">
+                  <div className="flex items-center gap-3">
+                    <span className="flex items-center justify-center w-7 h-7 rounded-md border border-orange/30 bg-orange/8 text-orange">
+                      <Sigma size={14} strokeWidth={1.8} />
+                    </span>
+                    <span className="text-base font-semibold text-navy font-sans">
+                      Numericals Practice Sets
+                    </span>
+                    <span className="text-xs text-muted-foreground font-sans ml-1">
+                      ₹49 each
+                    </span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4 pt-1">
+                  <ChapterList
+                    chapters={chapters}
+                    scope="study.numericals"
+                    makeItem={(chapter) => ({
+                      label: `Numericals Practice Set: ${chapter}`,
+                      price: 49,
+                      description: `${selectedClass} ${selectedBoard} — Numerical problem sets`,
+                    })}
+                    onPay={openPay}
+                    buttonLabel="Unlock & Download"
                   />
                 </AccordionContent>
               </AccordionItem>
@@ -631,6 +799,7 @@ export default function LearnPage() {
                       description: `${selectedClass} ${selectedBoard} — Important diagrams`,
                     })}
                     onPay={openPay}
+                    buttonLabel="Unlock & Download"
                   />
                 </AccordionContent>
               </AccordionItem>
@@ -644,7 +813,7 @@ export default function LearnPage() {
                 <AccordionTrigger className="px-4 py-3.5 hover:no-underline hover:bg-muted/40 transition-colors [&[data-state=open]]:bg-muted/30">
                   <div className="flex items-center gap-3">
                     <span className="flex items-center justify-center w-7 h-7 rounded-md border border-orange/30 bg-orange/8 text-orange">
-                      <Sigma size={14} strokeWidth={1.8} />
+                      <FileText size={14} strokeWidth={1.8} />
                     </span>
                     <span className="text-base font-semibold text-navy font-sans">
                       Formula Sheets
@@ -664,11 +833,12 @@ export default function LearnPage() {
                       description: `${selectedClass} ${selectedBoard} — Formula sheet`,
                     })}
                     onPay={openPay}
+                    buttonLabel="Unlock & Download"
                   />
                 </AccordionContent>
               </AccordionItem>
 
-              {/* Reference Books */}
+              {/* Reference Book Notes */}
               <AccordionItem
                 value="books"
                 className="border border-border rounded-lg overflow-hidden"
@@ -697,6 +867,7 @@ export default function LearnPage() {
                       description: `${selectedClass} ${selectedBoard} — Reference book notes`,
                     })}
                     onPay={openPay}
+                    buttonLabel="Unlock & Download"
                   />
                 </AccordionContent>
               </AccordionItem>
@@ -739,14 +910,12 @@ export default function LearnPage() {
                   className="text-base font-bold text-navy mb-1"
                   style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
                 >
-                  Personally checked by faculty
+                  Reviewed by our faculty
                 </h3>
                 <p className="text-sm font-sans text-muted-foreground leading-relaxed">
-                  Every test paper is reviewed by{" "}
-                  <span className="font-semibold text-foreground">
-                    Shantanu Chatterjee
-                  </span>{" "}
-                  — you get real, handwritten feedback, not automated scoring.
+                  Every answer sheet is personally reviewed by our faculty.
+                  Students receive handwritten feedback explaining mistakes and
+                  how to improve.
                 </p>
               </div>
             </div>
@@ -780,6 +949,7 @@ export default function LearnPage() {
                         }}
                         ocid={`test.chapter.button.${idx + 1}`}
                         onPay={openPay}
+                        buttonLabel="Unlock Test"
                       />
                     </li>
                   ))}
@@ -818,6 +988,7 @@ export default function LearnPage() {
                         }}
                         ocid={`test.comp.button.${idx + 1}`}
                         onPay={openPay}
+                        buttonLabel="Unlock Test"
                       />
                     </li>
                   ))}
@@ -833,8 +1004,9 @@ export default function LearnPage() {
                   Submit Your Answer Sheet
                 </h3>
                 <p className="text-sm font-sans text-muted-foreground mb-4">
-                  Upload a photo of your completed answer sheet for personal
-                  checking by faculty. Accepted formats: JPG, PNG, HEIC.
+                  After solving the test on paper, upload a clear photo of your
+                  answer sheet. Our faculty will review it and send feedback on
+                  WhatsApp.
                 </p>
 
                 <label
@@ -908,7 +1080,7 @@ export default function LearnPage() {
                   </span>
                   <div>
                     <h3 className="text-base font-semibold text-navy font-sans">
-                      Half-Yearly Exam
+                      Half-Yearly Practice Exam
                     </h3>
                     <p className="text-xs font-sans text-muted-foreground mt-0.5 leading-relaxed">
                       Covers first half of the syllabus. Follows school exam
@@ -918,7 +1090,7 @@ export default function LearnPage() {
                 </div>
                 <PayButton
                   item={{
-                    label: `Half-Yearly Exam Paper — ${selectedClass} ${selectedBoard}`,
+                    label: `Half-Yearly Practice Exam — ${selectedClass} ${selectedBoard}`,
                     price: 99,
                     description: `${selectedClass} ${selectedBoard} — Half-yearly exam paper`,
                   }}
@@ -935,7 +1107,7 @@ export default function LearnPage() {
                   </span>
                   <div>
                     <h3 className="text-base font-semibold text-navy font-sans">
-                      Annual Exam
+                      Annual Board Pattern Exam
                     </h3>
                     <p className="text-xs font-sans text-muted-foreground mt-0.5 leading-relaxed">
                       Full syllabus examination. Follows school exam pattern.
@@ -944,7 +1116,7 @@ export default function LearnPage() {
                 </div>
                 <PayButton
                   item={{
-                    label: `Annual Exam Paper — ${selectedClass} ${selectedBoard}`,
+                    label: `Annual Board Pattern Exam — ${selectedClass} ${selectedBoard}`,
                     price: 99,
                     description: `${selectedClass} ${selectedBoard} — Annual exam paper`,
                   }}
@@ -959,6 +1131,27 @@ export default function LearnPage() {
           {/* LEARNING FLOW                                        */}
           {/* ──────────────────────────────────────────────────── */}
           <LearningFlow />
+
+          {/* ──────────────────────────────────────────────────── */}
+          {/* ACADEMIC INTEGRITY                                   */}
+          {/* ──────────────────────────────────────────────────── */}
+          <section
+            data-ocid="integrity.section"
+            className="bg-card border border-border rounded-lg p-6 md:p-8 text-center"
+            style={{ boxShadow: "0 1px 3px 0 rgba(26, 46, 90, 0.06)" }}
+          >
+            <h2
+              className="text-lg font-bold text-navy mb-2"
+              style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+            >
+              Academic Integrity
+            </h2>
+            <p className="text-sm font-sans text-muted-foreground leading-relaxed max-w-xl mx-auto">
+              All notes, tests, and exams are designed to match ICSE and CBSE
+              board standards and focus on conceptual understanding and
+              numerical problem solving.
+            </p>
+          </section>
         </div>
       </main>
 
@@ -981,11 +1174,11 @@ export default function LearnPage() {
 
 // ─── Learning Flow Component ──────────────────────────────────────────────────
 const FLOW_STEPS = [
-  { icon: BookOpen, label: "Study", color: "text-navy" },
+  { icon: BookOpen, label: "Study Concepts", color: "text-navy" },
   { icon: School, label: "Attend Class", color: "text-orange" },
-  { icon: ClipboardCheck, label: "Take Test", color: "text-orange" },
-  { icon: FileText, label: "Take Exam", color: "text-orange" },
-  { icon: TrendingUp, label: "Improve", color: "text-navy" },
+  { icon: ClipboardCheck, label: "Practice Tests", color: "text-orange" },
+  { icon: FileText, label: "Full Exam", color: "text-orange" },
+  { icon: TrendingUp, label: "Improve Performance", color: "text-navy" },
 ];
 
 function LearningFlow() {

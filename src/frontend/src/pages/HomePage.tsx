@@ -10,9 +10,11 @@ import {
 import { useNavigate } from "@tanstack/react-router";
 import {
   AlertCircle,
+  BookOpen,
   Calculator,
   FlaskConical,
   Lightbulb,
+  MessageCircle,
   Star,
   Users,
 } from "lucide-react";
@@ -46,6 +48,11 @@ const USP_CARDS = [
     icon: Star,
     title: "Personal Attention",
     desc: "Every student's progress is tracked and guided individually.",
+  },
+  {
+    icon: BookOpen,
+    title: "Board-Focused Study",
+    desc: "Content strictly aligned to CBSE and ICSE board patterns for exam readiness.",
   },
 ];
 
@@ -428,14 +435,6 @@ export default function HomePage() {
                 Shantanu Chatterjee
               </h2>
 
-              {/* Tagline */}
-              <p
-                className="text-lg sm:text-xl font-sans font-semibold mb-3"
-                style={{ color: "oklch(0.88 0.14 50)" }}
-              >
-                Physics made simple. Results guaranteed.
-              </p>
-
               {/* Subtitle */}
               <p
                 className="text-sm font-sans leading-relaxed"
@@ -446,34 +445,20 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* Right: subject icon block */}
+            {/* Right: logo */}
             <div
-              className="shrink-0 flex flex-col items-center justify-center gap-1 rounded-xl p-5"
+              className="shrink-0 flex items-center justify-center rounded-xl p-3"
               style={{
-                backgroundColor: "oklch(var(--orange) / 0.12)",
-                border: "1px solid oklch(var(--orange) / 0.28)",
-                minWidth: 110,
+                backgroundColor: "oklch(var(--orange) / 0.10)",
+                border: "1px solid oklch(var(--orange) / 0.25)",
               }}
               aria-hidden="true"
             >
-              <span
-                className="text-5xl font-serif font-black leading-none select-none"
-                style={{ color: "oklch(var(--orange))" }}
-              >
-                F
-              </span>
-              <span
-                className="text-xs font-sans font-semibold tracking-widest uppercase"
-                style={{ color: "oklch(0.75 0.03 240)" }}
-              >
-                Physics
-              </span>
-              <span
-                className="text-2xl font-sans font-light leading-none mt-0.5 select-none"
-                style={{ color: "oklch(0.7 0.06 240)" }}
-              >
-                = ma
-              </span>
+              <img
+                src="/assets/uploads/Physics-Shan-Se-Logo-1.jpg"
+                alt="Physics Shan Se"
+                className="w-24 h-24 object-contain rounded-lg"
+              />
             </div>
           </div>
         </section>
