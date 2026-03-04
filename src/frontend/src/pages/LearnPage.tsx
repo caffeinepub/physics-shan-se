@@ -301,16 +301,6 @@ function AttendClassSection() {
         </div>
       </div>
 
-      {/* Poster image */}
-      <div className="px-6 md:px-8 pt-6">
-        <img
-          src="/assets/uploads/Poster-1-3.png"
-          alt="Physics Shan Se Weekend Batch Schedule by Shantanu Chatterjee"
-          className="w-full rounded-lg object-contain shadow-sm border border-border"
-          style={{ maxHeight: 480 }}
-        />
-      </div>
-
       {/* Three feature cards */}
       <div className="px-6 md:px-8 py-6 grid grid-cols-1 md:grid-cols-3 gap-5">
         {/* Location card */}
@@ -420,23 +410,46 @@ function AttendClassSection() {
             <span className="text-orange font-semibold">April 4th, 2026</span>
           </p>
 
-          <ul className="divide-y divide-border text-sm font-sans">
-            {BATCHES.map((batch) => (
-              <li
+          <div className="rounded-md overflow-hidden border border-border text-sm font-sans">
+            {/* Table header */}
+            <div
+              className="grid grid-cols-3 px-3 py-2"
+              style={{ backgroundColor: "oklch(var(--orange) / 0.10)" }}
+            >
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Day
+              </span>
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Time
+              </span>
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide text-right">
+                Batch
+              </span>
+            </div>
+            {BATCHES.map((batch, i) => (
+              <div
                 key={`${batch.day}-${batch.cls}`}
-                className="py-2 flex items-start justify-between gap-2"
+                className="grid grid-cols-3 px-3 py-2.5 border-t border-border items-center"
+                style={{
+                  backgroundColor:
+                    i % 2 === 0 ? "transparent" : "oklch(0.97 0.003 240 / 0.5)",
+                }}
               >
+                <span className="font-semibold text-navy text-xs">
+                  {batch.day}
+                </span>
                 <span className="text-muted-foreground text-xs leading-snug">
-                  <span className="font-semibold text-navy">{batch.day}</span>
-                  <br />
                   {batch.time}
                 </span>
-                <span className="text-orange font-semibold text-xs text-right">
+                <span
+                  className="text-xs font-bold text-right"
+                  style={{ color: "oklch(var(--orange))" }}
+                >
                   {batch.cls}
                 </span>
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
 
           <p className="text-xs text-muted-foreground font-sans mt-auto">
             Max 10 students per batch · Personal attention
@@ -696,14 +709,46 @@ export default function LearnPage() {
           <SectionCard id="take-test" ocid="test.section">
             <SectionHeading number="03" title="Take Test" />
 
-            {/* Faculty checking banner */}
-            <div className="mb-6 rounded-lg overflow-hidden border border-border">
-              <img
-                src="/assets/uploads/Physical-Test-Paper-Check-By-Faculty-2.png"
-                alt="Get your test papers personally checked by our faculty — real feedback, not automated"
-                className="w-full object-contain"
-                style={{ maxHeight: 320 }}
-              />
+            {/* Faculty checking callout */}
+            <div
+              className="mb-6 rounded-lg px-5 py-5 flex items-start gap-4"
+              style={{
+                borderLeft: "4px solid oklch(var(--orange))",
+                backgroundColor: "oklch(var(--orange) / 0.07)",
+                border: "1px solid oklch(var(--orange) / 0.20)",
+                borderLeftWidth: "4px",
+                borderLeftColor: "oklch(var(--orange))",
+              }}
+            >
+              <span
+                className="flex items-center justify-center w-10 h-10 rounded-lg shrink-0 mt-0.5"
+                style={{
+                  backgroundColor: "oklch(var(--orange) / 0.12)",
+                  border: "1px solid oklch(var(--orange) / 0.28)",
+                }}
+                aria-hidden="true"
+              >
+                <ClipboardCheck
+                  size={20}
+                  strokeWidth={1.8}
+                  style={{ color: "oklch(var(--orange))" }}
+                />
+              </span>
+              <div>
+                <h3
+                  className="text-base font-bold text-navy mb-1"
+                  style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+                >
+                  Personally checked by faculty
+                </h3>
+                <p className="text-sm font-sans text-muted-foreground leading-relaxed">
+                  Every test paper is reviewed by{" "}
+                  <span className="font-semibold text-foreground">
+                    Shantanu Chatterjee
+                  </span>{" "}
+                  — you get real, handwritten feedback, not automated scoring.
+                </p>
+              </div>
             </div>
 
             <div className="space-y-6">
