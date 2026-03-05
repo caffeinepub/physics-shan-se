@@ -384,15 +384,7 @@ export default function RegisterPage() {
 
       {/* Site footer */}
       <p className="text-xs text-muted-foreground font-sans mt-8">
-        © {new Date().getFullYear()}.{" "}
-        <a
-          href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline underline-offset-2 hover:text-orange transition-colors"
-        >
-          Built with ♥ using caffeine.ai
-        </a>
+        © Physics Shan Se
       </p>
     </div>
   );

@@ -431,15 +431,7 @@ export default function AdminPage() {
 
       <footer className="border-t border-border py-5 px-4 text-center">
         <p className="text-xs text-muted-foreground font-sans">
-          © {new Date().getFullYear()}.{" "}
-          <a
-            href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline underline-offset-2 hover:text-orange transition-colors"
-          >
-            Built with ♥ using caffeine.ai
-          </a>
+          © Physics Shan Se
         </p>
       </footer>
     </div>
