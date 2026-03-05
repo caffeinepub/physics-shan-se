@@ -476,6 +476,15 @@ export default function HomePage() {
             Built with ♥ using caffeine.ai
           </a>
         </p>
+        <p className="text-xs text-muted-foreground/40 font-sans mt-1">
+          <a
+            href="/admin"
+            className="hover:text-muted-foreground/70 transition-colors"
+            data-ocid="footer.admin.link"
+          >
+            Admin
+          </a>
+        </p>
       </footer>
     </div>
   );

@@ -89,25 +89,67 @@ export class ExternalBlob {
         return this;
     }
 }
-export interface backendInterface {
-    ping(): Promise<string>;
+export interface Student {
+    id: bigint;
+    school: string;
+    name: string;
+    email: string;
+    phone: string;
+    pincode: string;
 }
+export interface backendInterface {
+    getAllStudents(): Promise<Array<Student>>;
+    loginStudent(phone: string): Promise<Student | null>;
+    registerStudent(name: string, email: string, phone: string, pincode: string, school: string): Promise<bigint>;
+}
+import type { Student as _Student } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
-    async ping(): Promise<string> {
+    async getAllStudents(): Promise<Array<Student>> {
         if (this.processError) {
             try {
-                const result = await this.actor.ping();
+                const result = await this.actor.getAllStudents();
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.ping();
+            const result = await this.actor.getAllStudents();
             return result;
         }
     }
+    async loginStudent(arg0: string): Promise<Student | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.loginStudent(arg0);
+                return from_candid_opt_n1(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.loginStudent(arg0);
+            return from_candid_opt_n1(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async registerStudent(arg0: string, arg1: string, arg2: string, arg3: string, arg4: string): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.registerStudent(arg0, arg1, arg2, arg3, arg4);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.registerStudent(arg0, arg1, arg2, arg3, arg4);
+            return result;
+        }
+    }
+}
+function from_candid_opt_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Student]): Student | null {
+    return value.length === 0 ? null : value[0];
 }
 export interface CreateActorOptions {
     agent?: Agent;

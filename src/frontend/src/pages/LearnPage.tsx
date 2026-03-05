@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Link, useSearch } from "@tanstack/react-router";
+import { Link, useLocation, useSearch } from "@tanstack/react-router";
 import {
   ArrowLeft,
   BookMarked,
@@ -23,6 +23,7 @@ import {
   FileDown,
   FileText,
   ImageIcon,
+  Lock,
   MapPin,
   Phone,
   School,
@@ -34,6 +35,7 @@ import {
 import { useRef, useState } from "react";
 import NavBar from "../components/layout/NavBar";
 import { CHAPTERS } from "../data/chapters";
+import { useStudentAuth } from "../hooks/useStudentAuth";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface SearchParams {
@@ -605,11 +607,59 @@ function AttendClassSection() {
   );
 }
 
+// ─── Login Gate Card ──────────────────────────────────────────────────────────
+function LoginGateCard({ redirectHref }: { redirectHref: string }) {
+  return (
+    <div
+      className="flex flex-col items-center gap-5 py-10 px-6 text-center rounded-xl border-2 border-dashed"
+      style={{ borderColor: "oklch(var(--orange) / 0.30)" }}
+      data-ocid="learn.login_gate.card"
+    >
+      <span
+        className="flex items-center justify-center w-14 h-14 rounded-full"
+        style={{
+          backgroundColor: "oklch(var(--orange) / 0.10)",
+          border: "1px solid oklch(var(--orange) / 0.25)",
+        }}
+        aria-hidden="true"
+      >
+        <Lock
+          size={24}
+          strokeWidth={1.8}
+          style={{ color: "oklch(var(--orange))" }}
+        />
+      </span>
+      <div>
+        <p
+          className="text-lg font-bold text-navy mb-1.5"
+          style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+        >
+          Login to Access
+        </p>
+        <p className="text-sm font-sans text-muted-foreground leading-relaxed max-w-xs mx-auto">
+          Register or log in to access study material, tests, and exams.
+        </p>
+      </div>
+      <Link
+        to="/register"
+        search={{ redirect: redirectHref }}
+        className="inline-flex items-center gap-2 px-6 py-2.5 rounded-md text-white font-sans font-semibold text-sm transition-colors duration-200"
+        style={{ backgroundColor: "oklch(var(--orange))" }}
+        data-ocid="learn.login_gate.button"
+      >
+        Register / Log In
+      </Link>
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function LearnPage() {
   const search = useSearch({ strict: false }) as SearchParams;
+  const location = useLocation();
   const selectedClass = search.class ?? "Class 9";
   const selectedBoard = search.board ?? "ICSE";
+  const { student } = useStudentAuth();
 
   const chapters = CHAPTERS[selectedClass]?.[selectedBoard] ?? [];
 
@@ -691,440 +741,476 @@ export default function LearnPage() {
           {/* SECTION 2: STUDY ONLINE                             */}
           {/* ──────────────────────────────────────────────────── */}
           <SectionCard id="study-online" ocid="study.section">
-            <SectionHeading number="02" title="Study Online" />
-            <p className="text-sm font-sans text-muted-foreground mb-2 -mt-2">
-              Download chapter-wise study material prepared for ICSE and CBSE
-              physics students.
-            </p>
-            <p className="text-xs font-sans text-muted-foreground mb-6">
-              Pay and unlock each resource for {selectedClass} ({selectedBoard}
-              ).
-            </p>
+            {!student ? (
+              <>
+                <SectionHeading number="02" title="Study Online" />
+                <LoginGateCard redirectHref={location.href} />
+              </>
+            ) : (
+              <>
+                <SectionHeading number="02" title="Study Online" />
+                <p className="text-sm font-sans text-muted-foreground mb-2 -mt-2">
+                  Download chapter-wise study material prepared for ICSE and
+                  CBSE physics students.
+                </p>
+                <p className="text-xs font-sans text-muted-foreground mb-6">
+                  Pay and unlock each resource for {selectedClass} (
+                  {selectedBoard}
+                  ).
+                </p>
 
-            <Accordion type="multiple" className="space-y-3">
-              {/* Concept Notes */}
-              <AccordionItem
-                value="notes"
-                className="border border-border rounded-lg overflow-hidden"
-                data-ocid="study.notes.panel"
-              >
-                <AccordionTrigger className="px-4 py-3.5 hover:no-underline hover:bg-muted/40 transition-colors [&[data-state=open]]:bg-muted/30">
-                  <div className="flex items-center gap-3">
-                    <span className="flex items-center justify-center w-7 h-7 rounded-md border border-orange/30 bg-orange/8 text-orange">
-                      <BookOpen size={14} strokeWidth={1.8} />
-                    </span>
-                    <span className="text-base font-semibold text-navy font-sans">
-                      Concept Notes
-                    </span>
-                    <span className="text-xs text-muted-foreground font-sans ml-1">
-                      ₹49 each
-                    </span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="px-4 pb-4 pt-1">
-                  <ChapterList
-                    chapters={chapters}
-                    scope="study.notes"
-                    makeItem={(chapter) => ({
-                      label: `Concept Notes: ${chapter}`,
-                      price: 49,
-                      description: `${selectedClass} ${selectedBoard} — Detailed concept notes`,
-                    })}
-                    onPay={openPay}
-                    buttonLabel="Unlock & Download"
-                  />
-                </AccordionContent>
-              </AccordionItem>
+                <Accordion type="multiple" className="space-y-3">
+                  {/* Concept Notes */}
+                  <AccordionItem
+                    value="notes"
+                    className="border border-border rounded-lg overflow-hidden"
+                    data-ocid="study.notes.panel"
+                  >
+                    <AccordionTrigger className="px-4 py-3.5 hover:no-underline hover:bg-muted/40 transition-colors [&[data-state=open]]:bg-muted/30">
+                      <div className="flex items-center gap-3">
+                        <span className="flex items-center justify-center w-7 h-7 rounded-md border border-orange/30 bg-orange/8 text-orange">
+                          <BookOpen size={14} strokeWidth={1.8} />
+                        </span>
+                        <span className="text-base font-semibold text-navy font-sans">
+                          Concept Notes
+                        </span>
+                        <span className="text-xs text-muted-foreground font-sans ml-1">
+                          ₹49 each
+                        </span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-4 pb-4 pt-1">
+                      <ChapterList
+                        chapters={chapters}
+                        scope="study.notes"
+                        makeItem={(chapter) => ({
+                          label: `Concept Notes: ${chapter}`,
+                          price: 49,
+                          description: `${selectedClass} ${selectedBoard} — Detailed concept notes`,
+                        })}
+                        onPay={openPay}
+                        buttonLabel="Unlock & Download"
+                      />
+                    </AccordionContent>
+                  </AccordionItem>
 
-              {/* Numericals Practice Sets */}
-              <AccordionItem
-                value="numericals"
-                className="border border-border rounded-lg overflow-hidden"
-                data-ocid="study.numericals.panel"
-              >
-                <AccordionTrigger className="px-4 py-3.5 hover:no-underline hover:bg-muted/40 transition-colors [&[data-state=open]]:bg-muted/30">
-                  <div className="flex items-center gap-3">
-                    <span className="flex items-center justify-center w-7 h-7 rounded-md border border-orange/30 bg-orange/8 text-orange">
-                      <Sigma size={14} strokeWidth={1.8} />
-                    </span>
-                    <span className="text-base font-semibold text-navy font-sans">
-                      Numericals Practice Sets
-                    </span>
-                    <span className="text-xs text-muted-foreground font-sans ml-1">
-                      ₹49 each
-                    </span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="px-4 pb-4 pt-1">
-                  <ChapterList
-                    chapters={chapters}
-                    scope="study.numericals"
-                    makeItem={(chapter) => ({
-                      label: `Numericals Practice Set: ${chapter}`,
-                      price: 49,
-                      description: `${selectedClass} ${selectedBoard} — Numerical problem sets`,
-                    })}
-                    onPay={openPay}
-                    buttonLabel="Unlock & Download"
-                  />
-                </AccordionContent>
-              </AccordionItem>
+                  {/* Numericals Practice Sets */}
+                  <AccordionItem
+                    value="numericals"
+                    className="border border-border rounded-lg overflow-hidden"
+                    data-ocid="study.numericals.panel"
+                  >
+                    <AccordionTrigger className="px-4 py-3.5 hover:no-underline hover:bg-muted/40 transition-colors [&[data-state=open]]:bg-muted/30">
+                      <div className="flex items-center gap-3">
+                        <span className="flex items-center justify-center w-7 h-7 rounded-md border border-orange/30 bg-orange/8 text-orange">
+                          <Sigma size={14} strokeWidth={1.8} />
+                        </span>
+                        <span className="text-base font-semibold text-navy font-sans">
+                          Numericals Practice Sets
+                        </span>
+                        <span className="text-xs text-muted-foreground font-sans ml-1">
+                          ₹49 each
+                        </span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-4 pb-4 pt-1">
+                      <ChapterList
+                        chapters={chapters}
+                        scope="study.numericals"
+                        makeItem={(chapter) => ({
+                          label: `Numericals Practice Set: ${chapter}`,
+                          price: 49,
+                          description: `${selectedClass} ${selectedBoard} — Numerical problem sets`,
+                        })}
+                        onPay={openPay}
+                        buttonLabel="Unlock & Download"
+                      />
+                    </AccordionContent>
+                  </AccordionItem>
 
-              {/* Important Diagrams */}
-              <AccordionItem
-                value="diagrams"
-                className="border border-border rounded-lg overflow-hidden"
-                data-ocid="study.diagrams.panel"
-              >
-                <AccordionTrigger className="px-4 py-3.5 hover:no-underline hover:bg-muted/40 transition-colors [&[data-state=open]]:bg-muted/30">
-                  <div className="flex items-center gap-3">
-                    <span className="flex items-center justify-center w-7 h-7 rounded-md border border-orange/30 bg-orange/8 text-orange">
-                      <ImageIcon size={14} strokeWidth={1.8} />
-                    </span>
-                    <span className="text-base font-semibold text-navy font-sans">
-                      Important Diagrams
-                    </span>
-                    <span className="text-xs text-muted-foreground font-sans ml-1">
-                      ₹49 each
-                    </span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="px-4 pb-4 pt-1">
-                  <ChapterList
-                    chapters={chapters}
-                    scope="study.diagrams"
-                    makeItem={(chapter) => ({
-                      label: `Diagrams: ${chapter}`,
-                      price: 49,
-                      description: `${selectedClass} ${selectedBoard} — Important diagrams`,
-                    })}
-                    onPay={openPay}
-                    buttonLabel="Unlock & Download"
-                  />
-                </AccordionContent>
-              </AccordionItem>
+                  {/* Important Diagrams */}
+                  <AccordionItem
+                    value="diagrams"
+                    className="border border-border rounded-lg overflow-hidden"
+                    data-ocid="study.diagrams.panel"
+                  >
+                    <AccordionTrigger className="px-4 py-3.5 hover:no-underline hover:bg-muted/40 transition-colors [&[data-state=open]]:bg-muted/30">
+                      <div className="flex items-center gap-3">
+                        <span className="flex items-center justify-center w-7 h-7 rounded-md border border-orange/30 bg-orange/8 text-orange">
+                          <ImageIcon size={14} strokeWidth={1.8} />
+                        </span>
+                        <span className="text-base font-semibold text-navy font-sans">
+                          Important Diagrams
+                        </span>
+                        <span className="text-xs text-muted-foreground font-sans ml-1">
+                          ₹49 each
+                        </span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-4 pb-4 pt-1">
+                      <ChapterList
+                        chapters={chapters}
+                        scope="study.diagrams"
+                        makeItem={(chapter) => ({
+                          label: `Diagrams: ${chapter}`,
+                          price: 49,
+                          description: `${selectedClass} ${selectedBoard} — Important diagrams`,
+                        })}
+                        onPay={openPay}
+                        buttonLabel="Unlock & Download"
+                      />
+                    </AccordionContent>
+                  </AccordionItem>
 
-              {/* Formula Sheets */}
-              <AccordionItem
-                value="formulas"
-                className="border border-border rounded-lg overflow-hidden"
-                data-ocid="study.formulas.panel"
-              >
-                <AccordionTrigger className="px-4 py-3.5 hover:no-underline hover:bg-muted/40 transition-colors [&[data-state=open]]:bg-muted/30">
-                  <div className="flex items-center gap-3">
-                    <span className="flex items-center justify-center w-7 h-7 rounded-md border border-orange/30 bg-orange/8 text-orange">
-                      <FileText size={14} strokeWidth={1.8} />
-                    </span>
-                    <span className="text-base font-semibold text-navy font-sans">
-                      Formula Sheets
-                    </span>
-                    <span className="text-xs text-muted-foreground font-sans ml-1">
-                      ₹49 each
-                    </span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="px-4 pb-4 pt-1">
-                  <ChapterList
-                    chapters={chapters}
-                    scope="study.formulas"
-                    makeItem={(chapter) => ({
-                      label: `Formula Sheet: ${chapter}`,
-                      price: 49,
-                      description: `${selectedClass} ${selectedBoard} — Formula sheet`,
-                    })}
-                    onPay={openPay}
-                    buttonLabel="Unlock & Download"
-                  />
-                </AccordionContent>
-              </AccordionItem>
+                  {/* Formula Sheets */}
+                  <AccordionItem
+                    value="formulas"
+                    className="border border-border rounded-lg overflow-hidden"
+                    data-ocid="study.formulas.panel"
+                  >
+                    <AccordionTrigger className="px-4 py-3.5 hover:no-underline hover:bg-muted/40 transition-colors [&[data-state=open]]:bg-muted/30">
+                      <div className="flex items-center gap-3">
+                        <span className="flex items-center justify-center w-7 h-7 rounded-md border border-orange/30 bg-orange/8 text-orange">
+                          <FileText size={14} strokeWidth={1.8} />
+                        </span>
+                        <span className="text-base font-semibold text-navy font-sans">
+                          Formula Sheets
+                        </span>
+                        <span className="text-xs text-muted-foreground font-sans ml-1">
+                          ₹49 each
+                        </span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-4 pb-4 pt-1">
+                      <ChapterList
+                        chapters={chapters}
+                        scope="study.formulas"
+                        makeItem={(chapter) => ({
+                          label: `Formula Sheet: ${chapter}`,
+                          price: 49,
+                          description: `${selectedClass} ${selectedBoard} — Formula sheet`,
+                        })}
+                        onPay={openPay}
+                        buttonLabel="Unlock & Download"
+                      />
+                    </AccordionContent>
+                  </AccordionItem>
 
-              {/* Reference Book Notes */}
-              <AccordionItem
-                value="books"
-                className="border border-border rounded-lg overflow-hidden"
-                data-ocid="study.books.panel"
-              >
-                <AccordionTrigger className="px-4 py-3.5 hover:no-underline hover:bg-muted/40 transition-colors [&[data-state=open]]:bg-muted/30">
-                  <div className="flex items-center gap-3">
-                    <span className="flex items-center justify-center w-7 h-7 rounded-md border border-orange/30 bg-orange/8 text-orange">
-                      <BookMarked size={14} strokeWidth={1.8} />
-                    </span>
-                    <span className="text-base font-semibold text-navy font-sans">
-                      Reference Book Notes
-                    </span>
-                    <span className="text-xs text-muted-foreground font-sans ml-1">
-                      ₹49 each
-                    </span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="px-4 pb-4 pt-1">
-                  <ChapterList
-                    chapters={chapters}
-                    scope="study.books"
-                    makeItem={(chapter) => ({
-                      label: `Reference Notes: ${chapter}`,
-                      price: 49,
-                      description: `${selectedClass} ${selectedBoard} — Reference book notes`,
-                    })}
-                    onPay={openPay}
-                    buttonLabel="Unlock & Download"
-                  />
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+                  {/* Reference Book Notes */}
+                  <AccordionItem
+                    value="books"
+                    className="border border-border rounded-lg overflow-hidden"
+                    data-ocid="study.books.panel"
+                  >
+                    <AccordionTrigger className="px-4 py-3.5 hover:no-underline hover:bg-muted/40 transition-colors [&[data-state=open]]:bg-muted/30">
+                      <div className="flex items-center gap-3">
+                        <span className="flex items-center justify-center w-7 h-7 rounded-md border border-orange/30 bg-orange/8 text-orange">
+                          <BookMarked size={14} strokeWidth={1.8} />
+                        </span>
+                        <span className="text-base font-semibold text-navy font-sans">
+                          Reference Book Notes
+                        </span>
+                        <span className="text-xs text-muted-foreground font-sans ml-1">
+                          ₹49 each
+                        </span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-4 pb-4 pt-1">
+                      <ChapterList
+                        chapters={chapters}
+                        scope="study.books"
+                        makeItem={(chapter) => ({
+                          label: `Reference Notes: ${chapter}`,
+                          price: 49,
+                          description: `${selectedClass} ${selectedBoard} — Reference book notes`,
+                        })}
+                        onPay={openPay}
+                        buttonLabel="Unlock & Download"
+                      />
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </>
+            )}
           </SectionCard>
 
           {/* ──────────────────────────────────────────────────── */}
           {/* SECTION 3: TAKE TEST                                */}
           {/* ──────────────────────────────────────────────────── */}
           <SectionCard id="take-test" ocid="test.section">
-            <SectionHeading number="03" title="Take Test" />
+            {!student ? (
+              <>
+                <SectionHeading number="03" title="Take Test" />
+                <LoginGateCard redirectHref={location.href} />
+              </>
+            ) : (
+              <>
+                <SectionHeading number="03" title="Take Test" />
 
-            {/* Faculty checking callout */}
-            <div
-              className="mb-6 rounded-lg px-5 py-5 flex items-start gap-4"
-              style={{
-                borderLeft: "4px solid oklch(var(--orange))",
-                backgroundColor: "oklch(var(--orange) / 0.07)",
-                border: "1px solid oklch(var(--orange) / 0.20)",
-                borderLeftWidth: "4px",
-                borderLeftColor: "oklch(var(--orange))",
-              }}
-            >
-              <span
-                className="flex items-center justify-center w-10 h-10 rounded-lg shrink-0 mt-0.5"
-                style={{
-                  backgroundColor: "oklch(var(--orange) / 0.12)",
-                  border: "1px solid oklch(var(--orange) / 0.28)",
-                }}
-                aria-hidden="true"
-              >
-                <ClipboardCheck
-                  size={20}
-                  strokeWidth={1.8}
-                  style={{ color: "oklch(var(--orange))" }}
-                />
-              </span>
-              <div>
-                <h3
-                  className="text-base font-bold text-navy mb-1"
-                  style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+                {/* Faculty checking callout */}
+                <div
+                  className="mb-6 rounded-lg px-5 py-5 flex items-start gap-4"
+                  style={{
+                    borderLeft: "4px solid oklch(var(--orange))",
+                    backgroundColor: "oklch(var(--orange) / 0.07)",
+                    border: "1px solid oklch(var(--orange) / 0.20)",
+                    borderLeftWidth: "4px",
+                    borderLeftColor: "oklch(var(--orange))",
+                  }}
                 >
-                  Reviewed by our faculty
-                </h3>
-                <p className="text-sm font-sans text-muted-foreground leading-relaxed">
-                  Every answer sheet is personally reviewed by our faculty.
-                  Students receive handwritten feedback explaining mistakes and
-                  how to improve.
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              {/* Chapter Tests */}
-              <div>
-                <h3 className="subsection-heading mb-1">Chapter Tests</h3>
-                <p className="text-xs font-sans text-muted-foreground mb-3">
-                  One test paper per chapter — ₹29 each. Download, attempt on
-                  paper, and submit for faculty feedback.
-                </p>
-                <ul className="divide-y divide-border">
-                  {chapters.map((chapter, idx) => (
-                    <li
-                      key={chapter}
-                      className="flex items-center justify-between py-3 px-1 gap-3"
-                      data-ocid={`test.item.${idx + 1}`}
-                    >
-                      <span className="text-sm font-sans text-foreground leading-snug">
-                        <span className="inline-block w-6 text-muted-foreground text-xs font-medium tabular-nums mr-1">
-                          {String(idx + 1).padStart(2, "0")}.
-                        </span>
-                        {chapter}
-                      </span>
-                      <PayButton
-                        item={{
-                          label: `Chapter Test: ${chapter}`,
-                          price: 29,
-                          description: `${selectedClass} ${selectedBoard} — Chapter test paper`,
-                        }}
-                        ocid={`test.chapter.button.${idx + 1}`}
-                        onPay={openPay}
-                        buttonLabel="Unlock Test"
-                      />
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Divider */}
-              <div className="border-t border-border" />
-
-              {/* Comprehensive Tests */}
-              <div>
-                <h3 className="subsection-heading mb-1">Comprehensive Tests</h3>
-                <p className="text-xs font-sans text-muted-foreground mb-3">
-                  Multi-chapter tests covering broader topics — ₹49 each.
-                </p>
-                <ul className="divide-y divide-border">
-                  {compTests.map((test, idx) => (
-                    <li
-                      key={test.label}
-                      className="flex items-start justify-between py-3 px-1 gap-3"
-                      data-ocid={`test.item.${chapters.length + idx + 1}`}
-                    >
-                      <div>
-                        <p className="text-sm font-sans font-medium text-foreground">
-                          {test.label}
-                        </p>
-                        <p className="text-xs text-muted-foreground font-sans mt-0.5 leading-relaxed">
-                          {test.chapters.join(" · ")}
-                        </p>
-                      </div>
-                      <PayButton
-                        item={{
-                          label: test.label,
-                          price: 49,
-                          description: `${selectedClass} ${selectedBoard} — ${test.chapters.join(", ")}`,
-                        }}
-                        ocid={`test.comp.button.${idx + 1}`}
-                        onPay={openPay}
-                        buttonLabel="Unlock Test"
-                      />
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Divider */}
-              <div className="border-t border-border" />
-
-              {/* Answer Sheet Upload */}
-              <div>
-                <h3 className="subsection-heading mb-1">
-                  Submit Your Answer Sheet
-                </h3>
-                <p className="text-sm font-sans text-muted-foreground mb-4">
-                  After solving the test on paper, upload a clear photo of your
-                  answer sheet. Our faculty will review it and send feedback on
-                  WhatsApp.
-                </p>
-
-                <label
-                  className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-orange/50 transition-colors cursor-pointer flex flex-col items-center"
-                  aria-label="Upload answer sheet"
-                  data-ocid="test.dropzone"
-                >
-                  <Upload size={22} className="text-muted-foreground mb-2" />
-                  {uploadedFile ? (
-                    <p className="text-sm font-sans text-orange font-medium">
-                      {uploadedFile.name}
-                    </p>
-                  ) : (
-                    <p className="text-sm font-sans text-muted-foreground">
-                      Click to browse or drop your image here
-                    </p>
-                  )}
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="sr-only"
-                    onChange={handleFileChange}
-                    aria-label="Upload answer sheet image"
-                    data-ocid="test.upload_button"
-                  />
-                </label>
-
-                {uploadSuccess && (
-                  <output
-                    className="mt-3 flex items-center gap-2 text-sm font-sans text-green-700 bg-green-50 border border-green-200 rounded-md px-3 py-2.5"
-                    aria-live="polite"
-                    data-ocid="test.success_state"
+                  <span
+                    className="flex items-center justify-center w-10 h-10 rounded-lg shrink-0 mt-0.5"
+                    style={{
+                      backgroundColor: "oklch(var(--orange) / 0.12)",
+                      border: "1px solid oklch(var(--orange) / 0.28)",
+                    }}
+                    aria-hidden="true"
                   >
-                    <span>✓</span>
-                    <span>
-                      Answer sheet submitted successfully. Your teacher will
-                      review it.
-                    </span>
-                  </output>
-                )}
+                    <ClipboardCheck
+                      size={20}
+                      strokeWidth={1.8}
+                      style={{ color: "oklch(var(--orange))" }}
+                    />
+                  </span>
+                  <div>
+                    <h3
+                      className="text-base font-bold text-navy mb-1"
+                      style={{
+                        fontFamily: "Georgia, 'Times New Roman', serif",
+                      }}
+                    >
+                      Reviewed by our faculty
+                    </h3>
+                    <p className="text-sm font-sans text-muted-foreground leading-relaxed">
+                      Every answer sheet is personally reviewed by our faculty.
+                      Students receive handwritten feedback explaining mistakes
+                      and how to improve.
+                    </p>
+                  </div>
+                </div>
 
-                <Button
-                  className="mt-4 w-full sm:w-auto px-8 h-11 font-sans font-semibold bg-orange text-white hover:bg-[oklch(0.64_0.18_50)] disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
-                  disabled={!uploadedFile}
-                  onClick={handleSubmitAnswerSheet}
-                  data-ocid="test.submit_button"
-                >
-                  Submit Answer Sheet
-                </Button>
-              </div>
-            </div>
+                <div className="space-y-6">
+                  {/* Chapter Tests */}
+                  <div>
+                    <h3 className="subsection-heading mb-1">Chapter Tests</h3>
+                    <p className="text-xs font-sans text-muted-foreground mb-3">
+                      One test paper per chapter — ₹29 each. Download, attempt
+                      on paper, and submit for faculty feedback.
+                    </p>
+                    <ul className="divide-y divide-border">
+                      {chapters.map((chapter, idx) => (
+                        <li
+                          key={chapter}
+                          className="flex items-center justify-between py-3 px-1 gap-3"
+                          data-ocid={`test.item.${idx + 1}`}
+                        >
+                          <span className="text-sm font-sans text-foreground leading-snug">
+                            <span className="inline-block w-6 text-muted-foreground text-xs font-medium tabular-nums mr-1">
+                              {String(idx + 1).padStart(2, "0")}.
+                            </span>
+                            {chapter}
+                          </span>
+                          <PayButton
+                            item={{
+                              label: `Chapter Test: ${chapter}`,
+                              price: 29,
+                              description: `${selectedClass} ${selectedBoard} — Chapter test paper`,
+                            }}
+                            ocid={`test.chapter.button.${idx + 1}`}
+                            onPay={openPay}
+                            buttonLabel="Unlock Test"
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="border-t border-border" />
+
+                  {/* Comprehensive Tests */}
+                  <div>
+                    <h3 className="subsection-heading mb-1">
+                      Comprehensive Tests
+                    </h3>
+                    <p className="text-xs font-sans text-muted-foreground mb-3">
+                      Multi-chapter tests covering broader topics — ₹49 each.
+                    </p>
+                    <ul className="divide-y divide-border">
+                      {compTests.map((test, idx) => (
+                        <li
+                          key={test.label}
+                          className="flex items-start justify-between py-3 px-1 gap-3"
+                          data-ocid={`test.item.${chapters.length + idx + 1}`}
+                        >
+                          <div>
+                            <p className="text-sm font-sans font-medium text-foreground">
+                              {test.label}
+                            </p>
+                            <p className="text-xs text-muted-foreground font-sans mt-0.5 leading-relaxed">
+                              {test.chapters.join(" · ")}
+                            </p>
+                          </div>
+                          <PayButton
+                            item={{
+                              label: test.label,
+                              price: 49,
+                              description: `${selectedClass} ${selectedBoard} — ${test.chapters.join(", ")}`,
+                            }}
+                            ocid={`test.comp.button.${idx + 1}`}
+                            onPay={openPay}
+                            buttonLabel="Unlock Test"
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="border-t border-border" />
+
+                  {/* Answer Sheet Upload */}
+                  <div>
+                    <h3 className="subsection-heading mb-1">
+                      Submit Your Answer Sheet
+                    </h3>
+                    <p className="text-sm font-sans text-muted-foreground mb-4">
+                      After solving the test on paper, upload a clear photo of
+                      your answer sheet. Our faculty will review it and send
+                      feedback on WhatsApp.
+                    </p>
+
+                    <label
+                      className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-orange/50 transition-colors cursor-pointer flex flex-col items-center"
+                      aria-label="Upload answer sheet"
+                      data-ocid="test.dropzone"
+                    >
+                      <Upload
+                        size={22}
+                        className="text-muted-foreground mb-2"
+                      />
+                      {uploadedFile ? (
+                        <p className="text-sm font-sans text-orange font-medium">
+                          {uploadedFile.name}
+                        </p>
+                      ) : (
+                        <p className="text-sm font-sans text-muted-foreground">
+                          Click to browse or drop your image here
+                        </p>
+                      )}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="sr-only"
+                        onChange={handleFileChange}
+                        aria-label="Upload answer sheet image"
+                        data-ocid="test.upload_button"
+                      />
+                    </label>
+
+                    {uploadSuccess && (
+                      <output
+                        className="mt-3 flex items-center gap-2 text-sm font-sans text-green-700 bg-green-50 border border-green-200 rounded-md px-3 py-2.5"
+                        aria-live="polite"
+                        data-ocid="test.success_state"
+                      >
+                        <span>✓</span>
+                        <span>
+                          Answer sheet submitted successfully. Your teacher will
+                          review it.
+                        </span>
+                      </output>
+                    )}
+
+                    <Button
+                      className="mt-4 w-full sm:w-auto px-8 h-11 font-sans font-semibold bg-orange text-white hover:bg-[oklch(0.64_0.18_50)] disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
+                      disabled={!uploadedFile}
+                      onClick={handleSubmitAnswerSheet}
+                      data-ocid="test.submit_button"
+                    >
+                      Submit Answer Sheet
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
           </SectionCard>
 
           {/* ──────────────────────────────────────────────────── */}
           {/* SECTION 4: TAKE EXAM                                */}
           {/* ──────────────────────────────────────────────────── */}
           <SectionCard id="take-exam" ocid="exam.section">
-            <SectionHeading number="04" title="Take Exam" />
-            <p className="text-sm font-sans text-muted-foreground mb-6 -mt-2">
-              Formal examination papers following school exam patterns for{" "}
-              {selectedClass}.
-            </p>
+            {!student ? (
+              <>
+                <SectionHeading number="04" title="Take Exam" />
+                <LoginGateCard redirectHref={location.href} />
+              </>
+            ) : (
+              <>
+                <SectionHeading number="04" title="Take Exam" />
+                <p className="text-sm font-sans text-muted-foreground mb-6 -mt-2">
+                  Formal examination papers following school exam patterns for{" "}
+                  {selectedClass}.
+                </p>
 
-            <div className="grid sm:grid-cols-2 gap-4">
-              {/* Half-Yearly Exam */}
-              <div className="border border-border rounded-lg p-5 bg-muted/20 hover:bg-muted/30 transition-colors">
-                <div className="flex items-start gap-3 mb-4">
-                  <span className="flex items-center justify-center w-8 h-8 rounded-full border border-orange/30 bg-orange/8 text-orange shrink-0 mt-0.5">
-                    <FileDown size={15} strokeWidth={1.8} />
-                  </span>
-                  <div>
-                    <h3 className="text-base font-semibold text-navy font-sans">
-                      Half-Yearly Practice Exam
-                    </h3>
-                    <p className="text-xs font-sans text-muted-foreground mt-0.5 leading-relaxed">
-                      Covers first half of the syllabus. Follows school exam
-                      pattern.
-                    </p>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {/* Half-Yearly Exam */}
+                  <div className="border border-border rounded-lg p-5 bg-muted/20 hover:bg-muted/30 transition-colors">
+                    <div className="flex items-start gap-3 mb-4">
+                      <span className="flex items-center justify-center w-8 h-8 rounded-full border border-orange/30 bg-orange/8 text-orange shrink-0 mt-0.5">
+                        <FileDown size={15} strokeWidth={1.8} />
+                      </span>
+                      <div>
+                        <h3 className="text-base font-semibold text-navy font-sans">
+                          Half-Yearly Practice Exam
+                        </h3>
+                        <p className="text-xs font-sans text-muted-foreground mt-0.5 leading-relaxed">
+                          Covers first half of the syllabus. Follows school exam
+                          pattern.
+                        </p>
+                      </div>
+                    </div>
+                    <PayButton
+                      item={{
+                        label: `Half-Yearly Practice Exam — ${selectedClass} ${selectedBoard}`,
+                        price: 99,
+                        description: `${selectedClass} ${selectedBoard} — Half-yearly exam paper`,
+                      }}
+                      ocid="exam.halfyearly.button"
+                      onPay={openPay}
+                    />
+                  </div>
+
+                  {/* Annual Exam */}
+                  <div className="border border-border rounded-lg p-5 bg-muted/20 hover:bg-muted/30 transition-colors">
+                    <div className="flex items-start gap-3 mb-4">
+                      <span className="flex items-center justify-center w-8 h-8 rounded-full border border-orange/30 bg-orange/8 text-orange shrink-0 mt-0.5">
+                        <FileText size={15} strokeWidth={1.8} />
+                      </span>
+                      <div>
+                        <h3 className="text-base font-semibold text-navy font-sans">
+                          Annual Board Pattern Exam
+                        </h3>
+                        <p className="text-xs font-sans text-muted-foreground mt-0.5 leading-relaxed">
+                          Full syllabus examination. Follows school exam
+                          pattern.
+                        </p>
+                      </div>
+                    </div>
+                    <PayButton
+                      item={{
+                        label: `Annual Board Pattern Exam — ${selectedClass} ${selectedBoard}`,
+                        price: 99,
+                        description: `${selectedClass} ${selectedBoard} — Annual exam paper`,
+                      }}
+                      ocid="exam.annual.button"
+                      onPay={openPay}
+                    />
                   </div>
                 </div>
-                <PayButton
-                  item={{
-                    label: `Half-Yearly Practice Exam — ${selectedClass} ${selectedBoard}`,
-                    price: 99,
-                    description: `${selectedClass} ${selectedBoard} — Half-yearly exam paper`,
-                  }}
-                  ocid="exam.halfyearly.button"
-                  onPay={openPay}
-                />
-              </div>
-
-              {/* Annual Exam */}
-              <div className="border border-border rounded-lg p-5 bg-muted/20 hover:bg-muted/30 transition-colors">
-                <div className="flex items-start gap-3 mb-4">
-                  <span className="flex items-center justify-center w-8 h-8 rounded-full border border-orange/30 bg-orange/8 text-orange shrink-0 mt-0.5">
-                    <FileText size={15} strokeWidth={1.8} />
-                  </span>
-                  <div>
-                    <h3 className="text-base font-semibold text-navy font-sans">
-                      Annual Board Pattern Exam
-                    </h3>
-                    <p className="text-xs font-sans text-muted-foreground mt-0.5 leading-relaxed">
-                      Full syllabus examination. Follows school exam pattern.
-                    </p>
-                  </div>
-                </div>
-                <PayButton
-                  item={{
-                    label: `Annual Board Pattern Exam — ${selectedClass} ${selectedBoard}`,
-                    price: 99,
-                    description: `${selectedClass} ${selectedBoard} — Annual exam paper`,
-                  }}
-                  ocid="exam.annual.button"
-                  onPay={openPay}
-                />
-              </div>
-            </div>
+              </>
+            )}
           </SectionCard>
 
           {/* ──────────────────────────────────────────────────── */}

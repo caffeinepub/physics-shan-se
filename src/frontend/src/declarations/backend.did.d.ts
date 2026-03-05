@@ -10,7 +10,22 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
-export interface _SERVICE { 'ping' : ActorMethod<[], string> }
+export interface Student {
+  'id' : bigint,
+  'school' : string,
+  'name' : string,
+  'email' : string,
+  'phone' : string,
+  'pincode' : string,
+}
+export interface _SERVICE {
+  'getAllStudents' : ActorMethod<[], Array<Student>>,
+  'loginStudent' : ActorMethod<[string], [] | [Student]>,
+  'registerStudent' : ActorMethod<
+    [string, string, string, string, string],
+    bigint
+  >,
+}
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];
 export declare const idlFactory: IDL.InterfaceFactory;

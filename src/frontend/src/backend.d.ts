@@ -7,6 +7,16 @@ export interface None {
     __kind__: "None";
 }
 export type Option<T> = Some<T> | None;
+export interface Student {
+    id: bigint;
+    school: string;
+    name: string;
+    email: string;
+    phone: string;
+    pincode: string;
+}
 export interface backendInterface {
-    ping(): Promise<string>;
+    getAllStudents(): Promise<Array<Student>>;
+    loginStudent(phone: string): Promise<Student | null>;
+    registerStudent(name: string, email: string, phone: string, pincode: string, school: string): Promise<bigint>;
 }

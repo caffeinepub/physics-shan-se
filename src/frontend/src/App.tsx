@@ -5,8 +5,10 @@ import {
   createRoute,
   createRouter,
 } from "@tanstack/react-router";
+import AdminPage from "./pages/AdminPage";
 import HomePage from "./pages/HomePage";
 import LearnPage from "./pages/LearnPage";
+import RegisterPage from "./pages/RegisterPage";
 
 const rootRoute = createRootRoute({
   component: () => <Outlet />,
@@ -24,7 +26,24 @@ const learnRoute = createRoute({
   component: LearnPage,
 });
 
-const routeTree = rootRoute.addChildren([homeRoute, learnRoute]);
+const registerRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/register",
+  component: RegisterPage,
+});
+
+const adminRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/admin",
+  component: AdminPage,
+});
+
+const routeTree = rootRoute.addChildren([
+  homeRoute,
+  learnRoute,
+  registerRoute,
+  adminRoute,
+]);
 
 const router = createRouter({ routeTree });
 

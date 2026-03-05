@@ -8,14 +8,46 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
+export const Student = IDL.Record({
+  'id' : IDL.Nat,
+  'school' : IDL.Text,
+  'name' : IDL.Text,
+  'email' : IDL.Text,
+  'phone' : IDL.Text,
+  'pincode' : IDL.Text,
+});
+
 export const idlService = IDL.Service({
-  'ping' : IDL.Func([], [IDL.Text], ['query']),
+  'getAllStudents' : IDL.Func([], [IDL.Vec(Student)], ['query']),
+  'loginStudent' : IDL.Func([IDL.Text], [IDL.Opt(Student)], ['query']),
+  'registerStudent' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Nat],
+      [],
+    ),
 });
 
 export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
-  return IDL.Service({ 'ping' : IDL.Func([], [IDL.Text], ['query']) });
+  const Student = IDL.Record({
+    'id' : IDL.Nat,
+    'school' : IDL.Text,
+    'name' : IDL.Text,
+    'email' : IDL.Text,
+    'phone' : IDL.Text,
+    'pincode' : IDL.Text,
+  });
+  
+  return IDL.Service({
+    'getAllStudents' : IDL.Func([], [IDL.Vec(Student)], ['query']),
+    'loginStudent' : IDL.Func([IDL.Text], [IDL.Opt(Student)], ['query']),
+    'registerStudent' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Nat],
+        [],
+      ),
+  });
 };
 
 export const init = ({ IDL }) => { return []; };
